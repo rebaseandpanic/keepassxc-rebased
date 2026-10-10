@@ -28,6 +28,7 @@
 #include "gui/MessageWidget.h"
 #include "osutils/DeviceListener.h"
 #include "rebased/QuickUnlockAutoPrompt.h"
+#include "rebased/UnlockState.h"
 
 class CompositeKey;
 class Database;
@@ -91,7 +92,7 @@ private:
     bool m_pollingHardwareKey = false;
     bool m_manualHardwareKeyRefresh = false;
     bool m_blockQuickUnlock = false;
-    bool m_unlockingDatabase = false;
+    UnlockState m_unlockingDatabase;
     bool m_triedToQuit = false;
     QTimer m_hideTimer;
     QTimer m_hideNoHardwareKeysFoundTimer;

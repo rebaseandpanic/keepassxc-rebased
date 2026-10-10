@@ -59,6 +59,7 @@
 #include "gui/widgets/ElidedLabel.h"
 #include "keeshare/KeeShare.h"
 #include "rebased/KeyboardLayoutSearch.h"
+#include "rebased/UnlockState.h"
 #include "remote/RemoteHandler.h"
 #include "remote/RemoteSettings.h"
 
@@ -1975,6 +1976,13 @@ Group* DatabaseWidget::currentGroup() const
 
 void DatabaseWidget::closeEvent(QCloseEvent* event)
 {
+    // No database closes while an unlock runs anywhere: the unlock dialog may target
+    // this database or be owned by this widget (reload), and is kept until it finishes
+    if (UnlockState::anyRunning()) {
+        event->ignore();
+        return;
+    }
+
     if (!lock() || m_databaseOpenWidget->unlockingDatabase()) {
         event->ignore();
         return;

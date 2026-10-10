@@ -242,7 +242,7 @@ bool DatabaseOpenWidget::event(QEvent* event)
 
 bool DatabaseOpenWidget::unlockingDatabase()
 {
-    return m_unlockingDatabase;
+    return m_unlockingDatabase.running();
 }
 
 void DatabaseOpenWidget::showMessage(const QString& text, MessageWidget::MessageType type, int autoHideTimeout)
@@ -252,6 +252,12 @@ void DatabaseOpenWidget::showMessage(const QString& text, MessageWidget::Message
 
 void DatabaseOpenWidget::load(const QString& filename)
 {
+    // The running unlock keeps its database
+    if (unlockingDatabase()) {
+        qWarning("Ignoring load of %s because of running unlock action.", qPrintable(filename));
+        return;
+    }
+
     clearForms();
 
     m_filename = filename;
@@ -303,6 +309,12 @@ void DatabaseOpenWidget::load(const QString& filename)
 
 void DatabaseOpenWidget::clearForms()
 {
+    // The running unlock keeps its database and forms
+    if (unlockingDatabase()) {
+        qWarning("Ignoring clearing of the unlock forms because of running unlock action.");
+        return;
+    }
+
     setUserInteractionLock(false);
     m_ui->editPassword->setText("");
     m_ui->editPassword->setShowPassword(false);
@@ -341,6 +353,11 @@ void DatabaseOpenWidget::enterKey(const QString& pw, const QString& keyFile)
 
 void DatabaseOpenWidget::openDatabase()
 {
+    if (unlockingDatabase()) {
+        qWarning("Ignoring unlock request for %s because of running unlock action.", qPrintable(m_filename));
+        return;
+    }
+
     // Cache this variable for future use then reset
     bool blockQuickUnlock = m_blockQuickUnlock || isOnQuickUnlockScreen();
     m_blockQuickUnlock = false;
@@ -393,6 +410,8 @@ void DatabaseOpenWidget::openDatabase()
             m_ui->messageWidget->hideMessage();
         }
 
+        // The result is known: the receivers may now clear, reload or close this screen
+        m_unlockingDatabase.setRunning(false);
         emit dialogFinished(true);
         clearForms();
     } else {
@@ -512,6 +531,10 @@ QSharedPointer<CompositeKey> DatabaseOpenWidget::buildDatabaseKey()
 
 void DatabaseOpenWidget::reject()
 {
+    // The running unlock cannot be canceled from here
+    if (unlockingDatabase()) {
+        return;
+    }
     emit dialogFinished(false);
 }
 
@@ -623,7 +646,7 @@ void DatabaseOpenWidget::setUserInteractionLock(bool state)
         }
         m_ui->centralStack->setEnabled(true);
     }
-    m_unlockingDatabase = state;
+    m_unlockingDatabase.setRunning(state);
 }
 
 bool DatabaseOpenWidget::canPerformQuickUnlock() const
@@ -683,7 +706,7 @@ void DatabaseOpenWidget::triggerQuickUnlock()
  */
 void DatabaseOpenWidget::resetQuickUnlock()
 {
-    if (!isQuickUnlockAvailable()) {
+    if (!isQuickUnlockAvailable() || unlockingDatabase()) {
         return;
     }
     if (!m_db.isNull()) {

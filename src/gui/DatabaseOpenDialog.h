@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2018 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -68,6 +69,7 @@ protected:
 private:
     void closeEvent(QCloseEvent* e) override;
     void selectTabOffset(int offset);
+    bool unlocking() const;
 
     QPointer<DatabaseOpenWidget> m_view;
     QPointer<QTabBar> m_tabBar;

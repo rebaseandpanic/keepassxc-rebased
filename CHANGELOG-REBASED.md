@@ -20,3 +20,5 @@ the KeePassXC version it is based on.
 - The fork and the official KeePassXC never run at the same time: the fork refuses to start while
   the official one is running, and an official KeePassXC started later hands over to the fork
 - macOS: the app no longer freezes while the Touch ID prompt is shown
+- While a database is being unlocked, its unlock dialog stays open on that database and no database
+  tab can be closed until the unlock finishes

@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2025 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,6 +23,7 @@
 #include "DatabaseWidget.h"
 #include "GuiTools.h"
 
+#include <QCloseEvent>
 #include <QFileInfo>
 #include <QLayout>
 #include <QShortcut>
@@ -106,7 +108,7 @@ void DatabaseOpenDialog::selectTabOffset(int offset)
 void DatabaseOpenDialog::addDatabaseTab(DatabaseWidget* dbWidget)
 {
     Q_ASSERT(dbWidget);
-    if (!dbWidget) {
+    if (!dbWidget || unlocking()) {
         return;
     }
 
@@ -120,7 +122,7 @@ void DatabaseOpenDialog::addDatabaseTab(DatabaseWidget* dbWidget)
 
 void DatabaseOpenDialog::setActiveDatabaseTab(DatabaseWidget* dbWidget)
 {
-    if (!dbWidget) {
+    if (!dbWidget || unlocking()) {
         return;
     }
     int index = m_tabDbWidgets.indexOf(dbWidget);
@@ -132,6 +134,14 @@ void DatabaseOpenDialog::setActiveDatabaseTab(DatabaseWidget* dbWidget)
 void DatabaseOpenDialog::tabChanged(int index)
 {
     if (index < 0 || index >= m_tabDbWidgets.count()) {
+        return;
+    }
+
+    // The running unlock keeps its database: switch the tab back
+    if (unlocking()) {
+        m_tabBar->blockSignals(true);
+        m_tabBar->setCurrentIndex(m_tabDbWidgets.indexOf(m_currentDbWidget));
+        m_tabBar->blockSignals(false);
         return;
     }
 
@@ -151,6 +161,11 @@ void DatabaseOpenDialog::tabChanged(int index)
  */
 void DatabaseOpenDialog::setTarget(DatabaseWidget* dbWidget, const QString& filePath)
 {
+    // The running unlock keeps its database
+    if (unlocking()) {
+        return;
+    }
+
     // reconnect finished signal to new dbWidget, then reload the UI
     if (m_currentDbWidget) {
         disconnect(this, &DatabaseOpenDialog::dialogFinished, m_currentDbWidget, nullptr);
@@ -163,6 +178,10 @@ void DatabaseOpenDialog::setTarget(DatabaseWidget* dbWidget, const QString& file
 
 void DatabaseOpenDialog::setIntent(DatabaseOpenDialog::Intent intent)
 {
+    // The running unlock keeps the intent it was started for
+    if (unlocking()) {
+        return;
+    }
     m_intent = intent;
 }
 
@@ -173,6 +192,11 @@ DatabaseOpenDialog::Intent DatabaseOpenDialog::intent() const
 
 void DatabaseOpenDialog::clearForms()
 {
+    // The running unlock keeps its database and tabs
+    if (unlocking()) {
+        return;
+    }
+
     m_view->clearForms();
     m_db.reset();
     m_intent = Intent::None;
@@ -202,6 +226,12 @@ QSharedPointer<Database> DatabaseOpenDialog::database() const
 
 void DatabaseOpenDialog::done(int result)
 {
+    // The dialog stays open while an unlock runs in it: closing it would finish the
+    // dialog twice or delete it (Qt::WA_DeleteOnClose) under the running unlock
+    if (unlocking()) {
+        return;
+    }
+
     hide();
 
     emit dialogFinished(result == QDialog::Accepted, m_currentDbWidget);
@@ -235,7 +265,22 @@ void DatabaseOpenDialog::complete(bool accepted)
 
 void DatabaseOpenDialog::closeEvent(QCloseEvent* e)
 {
+    // The dialog stays open while an unlock runs in it, see done()
+    if (unlocking()) {
+        e->ignore();
+        return;
+    }
+
     emit dialogFinished(false, m_currentDbWidget);
     clearForms();
     QDialog::closeEvent(e);
+}
+
+/**
+ * An unlock runs in the dialog (KeePassXC Rebased). Its database, intent, tabs and the
+ * dialog itself stay as they are until the result is known.
+ */
+bool DatabaseOpenDialog::unlocking() const
+{
+    return m_view && m_view->unlockingDatabase();
 }

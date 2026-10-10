@@ -51,6 +51,7 @@ set(core_SOURCES
         core/Translator.cpp
         rebased/KeyboardLayoutTranslator.cpp
         rebased/QuickUnlockAutoPrompt.cpp
+        rebased/UnlockState.cpp
         cli/Utils.cpp
         crypto/Crypto.cpp
         crypto/CryptoHash.cpp

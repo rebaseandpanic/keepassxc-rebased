@@ -1,4 +1,5 @@
 #  Copyright (C) 2011 Felix Geyer <debfx@fobos.de>
+#  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,6 +18,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 add_unit_test(NAME testgui SOURCES TestGui.cpp ../util/TemporaryFile.cpp ../mock/MockRemoteProcess.cpp LIBS ${TEST_LIBRARIES})
 add_unit_test(NAME testguipixmaps SOURCES TestGuiPixmaps.cpp LIBS ${TEST_LIBRARIES})
+add_unit_test(NAME testguiunlockinprogress SOURCES TestGuiUnlockInProgress.cpp ../util/TemporaryFile.cpp
+        LIBS ${TEST_LIBRARIES})
 
 file(GLOB_RECURSE ATTACHMENTS_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/attachments/*.cpp)
 add_unit_test(NAME testguiattachments SOURCES ${ATTACHMENTS_TEST_SOURCES} LIBS ${TEST_LIBRARIES})
