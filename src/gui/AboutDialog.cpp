@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2012 Felix Geyer <debfx@fobos.de>
  *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -316,7 +317,8 @@ AboutDialog::AboutDialog(QWidget* parent)
     setWindowFlags(Qt::Sheet);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-    m_ui->nameLabel->setText(m_ui->nameLabel->text().replace("${VERSION}", KEEPASSXC_VERSION));
+    m_ui->nameLabel->setText(
+        m_ui->nameLabel->text().replace("${APP_NAME}", KEEPASSXC_APP_NAME).replace("${VERSION}", KEEPASSXC_VERSION));
     QFont nameLabelFont = m_ui->nameLabel->font();
     nameLabelFont.setPointSize(nameLabelFont.pointSize() + 4);
     m_ui->nameLabel->setFont(nameLabelFont);

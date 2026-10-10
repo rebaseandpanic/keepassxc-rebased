@@ -59,7 +59,7 @@
         </font>
        </property>
        <property name="text">
-        <string notr="true">&lt;span style=&quot;font-size: 20pt&quot;&gt; KeePassXC ${VERSION}&lt;/span&gt;</string>
+        <string notr="true">&lt;span style=&quot;font-size: 20pt&quot;&gt; ${APP_NAME} ${VERSION}&lt;/span&gt;</string>
        </property>
        <property name="margin">
         <number>0</number>
@@ -82,6 +82,19 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
+        <widget class="QLabel" name="forkNoticeLabel">
+         <property name="text">
+          <string>KeePassXC Rebased is an unofficial fork of &lt;a href=&quot;https://keepassxc.org/&quot; style=&quot;text-decoration: underline&quot;&gt;KeePassXC&lt;/a&gt;. It is not affiliated with or supported by the KeePassXC Team.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="label_2">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -90,7 +103,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string notr="true">Website: &lt;a href=&quot;https://keepassxc.org/&quot; style=&quot;text-decoration: underline&quot;&gt;https://keepassxc.org&lt;/a&gt;</string>
+          <string notr="true">Website: &lt;a href=&quot;https://github.com/rebaseandpanic/keepassxc-rebased&quot; style=&quot;text-decoration: underline&quot;&gt;https://github.com/rebaseandpanic/keepassxc-rebased&lt;/a&gt;</string>
          </property>
          <property name="openExternalLinks">
           <bool>true</bool>
@@ -100,7 +113,7 @@
        <item>
         <widget class="QLabel" name="label_5">
          <property name="text">
-          <string>Report bugs at: &lt;a href=&quot;https://github.com/keepassxreboot/keepassxc/issues&quot; style=&quot;text-decoration: underline;&quot;&gt;https://github.com&lt;/a&gt;</string>
+          <string>Report bugs at: &lt;a href=&quot;https://github.com/rebaseandpanic/keepassxc-rebased/issues&quot; style=&quot;text-decoration: underline;&quot;&gt;https://github.com&lt;/a&gt;</string>
          </property>
          <property name="openExternalLinks">
           <bool>true</bool>

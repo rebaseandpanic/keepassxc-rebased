@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -76,7 +77,7 @@
 #include "mainwindowadaptor.h"
 #endif
 
-const QString MainWindow::BaseWindowTitle = "KeePassXC";
+const QString MainWindow::BaseWindowTitle = KEEPASSXC_APP_NAME;
 
 MainWindow* g_MainWindow = nullptr;
 MainWindow* getMainWindow()
@@ -90,6 +91,7 @@ MainWindow::MainWindow()
     g_MainWindow = this;
 
     m_ui->setupUi(this);
+    setWindowTitle(BaseWindowTitle);
 
 #ifdef Q_OS_MACOS
     macUtils()->configureWindowAndHelpMenus(this, m_ui->menuHelp);

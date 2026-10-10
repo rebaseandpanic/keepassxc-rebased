@@ -1,5 +1,6 @@
 #  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
 #  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
+#  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -431,7 +432,7 @@ if(WIN32)
     target_sources(${PROGNAME} PUBLIC ${WIN32_ResourceFiles})
 
 elseif(APPLE AND WITH_APP_BUNDLE)
-    set(MACOSX_BUNDLE_IDENTIFIER org.keepassxc.keepassxc)
+    set(MACOSX_BUNDLE_IDENTIFIER ${KEEPASSXC_APP_ID})
     set(MACOSX_BUNDLE_ICON_NAME keepassxc)
     set(MACOSX_BUNDLE_APPLE_ENTITLEMENTS "${CMAKE_SOURCE_DIR}/share/macosx/keepassxc.entitlements")
     configure_file("${CMAKE_SOURCE_DIR}/share/macosx/Info.plist.in" ${CMAKE_CURRENT_BINARY_DIR}/Info.plist)

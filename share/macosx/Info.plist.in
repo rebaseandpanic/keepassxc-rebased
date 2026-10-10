@@ -9,7 +9,7 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>English</string>
   <key>CFBundleDisplayName</key>
-  <string>${PROJECT_NAME}</string>
+  <string>${KEEPASSXC_APP_NAME}</string>
   <key>CFBundleExecutable</key>
   <string>${PROGNAME}</string>
   <key>CFBundleIconFile</key>
@@ -21,7 +21,7 @@
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>${PROJECT_NAME}</string>
+  <string>${KEEPASSXC_APP_NAME}</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleVersion</key>

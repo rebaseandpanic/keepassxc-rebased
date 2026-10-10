@@ -1,3 +1,25 @@
+# KeePassXC Rebased
+
+**KeePassXC Rebased is an unofficial fork of [KeePassXC](https://github.com/keepassxreboot/keepassxc).
+It is not affiliated with or supported by the KeePassXC Team.** Please report issues with this
+fork [here](https://github.com/rebaseandpanic/keepassxc-rebased/issues), not to the KeePassXC project.
+
+The fork tracks upstream KeePassXC and adds features that are not part of it. Its primary target
+is macOS. Releases are versioned `X.Y.Z-rebasedN`, where `X.Y.Z` is the upstream base version, and
+are published on the [releases page](https://github.com/rebaseandpanic/keepassxc-rebased/releases).
+
+Differences from KeePassXC:
+
+* Application name, macOS bundle identifier (`io.github.rebaseandpanic.keepassxc-rebased`) and,
+  on macOS and Windows, settings location are separate, so the fork does not touch the settings of
+  an official installation there. On Linux both share `~/.config/keepassxc`.
+* The KeePassXC-Browser extension works unchanged (same native messaging host name).
+
+Licensed under the GNU General Public License version 2 or (at your option) version 3, like
+KeePassXC. The original README of KeePassXC follows.
+
+---
+
 # <img src="https://keepassxc.org/assets/img/keepassxc.svg" width="40" height="40"/> KeePassXC
 
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/6326/badge)](https://bestpractices.coreinfrastructure.org/projects/6326)

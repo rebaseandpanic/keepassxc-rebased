@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2025 KeePassXC Team <team@keepassxc.org>
+ * Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -155,7 +156,8 @@ void NixUtils::setLaunchAtStartup(bool enable)
 
         const QString appImagePath = QString::fromLocal8Bit(qgetenv("APPIMAGE"));
         const bool isAppImage = !appImagePath.isNull() && QFile::exists(appImagePath);
-        const QString executablePathOrName = isAppImage ? appImagePath : QApplication::applicationName().toLower();
+        // The application name contains spaces; the Linux executable and icon are still named "keepassxc"
+        const QString executablePathOrName = isAppImage ? appImagePath : QStringLiteral("keepassxc");
 
         QTextStream stream(&desktopFile);
         stream << QStringLiteral("[Desktop Entry]") << '\n'
@@ -163,7 +165,7 @@ void NixUtils::setLaunchAtStartup(bool enable)
                << QStringLiteral("GenericName=") << tr("Password Manager") << '\n'
                << QStringLiteral("Exec=") << executablePathOrName << '\n'
                << QStringLiteral("TryExec=") << executablePathOrName << '\n'
-               << QStringLiteral("Icon=") << QApplication::applicationName().toLower() << '\n'
+               << QStringLiteral("Icon=") << QStringLiteral("keepassxc") << '\n'
                << QStringLiteral("StartupWMClass=keepassxc") << '\n'
                << QStringLiteral("StartupNotify=false") << '\n'
                << QStringLiteral("Terminal=false") << '\n'

@@ -1,5 +1,6 @@
 #  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
 #  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
+#  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -21,6 +22,10 @@ set(KEEPASSXC_VERSION_MAJOR "2")
 set(KEEPASSXC_VERSION_MINOR "8")
 set(KEEPASSXC_VERSION_PATCH "0")
 set(KEEPASSXC_VERSION "${KEEPASSXC_VERSION_MAJOR}.${KEEPASSXC_VERSION_MINOR}.${KEEPASSXC_VERSION_PATCH}")
+# User-visible application name of the KeePassXC Rebased fork
+set(KEEPASSXC_APP_NAME "KeePassXC Rebased")
+# Application identifier of the fork: macOS bundle identifier, launch agent and Linux autostart file name
+set(KEEPASSXC_APP_ID "io.github.rebaseandpanic.keepassxc-rebased")
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
 
@@ -394,7 +399,7 @@ if(WIN32)
     set(PLUGIN_INSTALL_DIR ".")
     set(DATA_INSTALL_DIR "share")
 elseif(APPLE AND WITH_APP_BUNDLE)
-    set(PROGNAME KeePassXC)
+    set(PROGNAME KeePassXC-Rebased)
     set(BUNDLE_INSTALL_DIR "${PROGNAME}.app/Contents")
     set(CMAKE_INSTALL_MANDIR "${BUNDLE_INSTALL_DIR}/Resources/man")
     set(CLI_INSTALL_DIR "${BUNDLE_INSTALL_DIR}/MacOS")

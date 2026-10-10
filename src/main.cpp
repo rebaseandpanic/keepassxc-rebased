@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -70,9 +71,9 @@ int main(int argc, char** argv)
     Application app(argc, argv);
     // don't set organizationName as that changes the return value of
     // QStandardPaths::writableLocation(QDesktopServices::DataLocation)
-    Application::setApplicationName("KeePassXC");
+    Application::setApplicationName(KEEPASSXC_APP_NAME);
     Application::setApplicationVersion(KEEPASSXC_VERSION);
-    app.setProperty("KPXC_QUALIFIED_APPNAME", "org.keepassxc.KeePassXC");
+    app.setProperty("KPXC_QUALIFIED_APPNAME", KEEPASSXC_APP_ID);
 
     // HACK: Prevent long-running threads from deadlocking the program with only 1 CPU
     // See https://github.com/keepassxreboot/keepassxc/issues/10391
