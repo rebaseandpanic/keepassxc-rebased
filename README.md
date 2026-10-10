@@ -18,6 +18,8 @@ Differences from KeePassXC:
   the official one is running, and an official KeePassXC started later hands over to the running fork.
 * The KeePassXC-Browser extension works unchanged (same native messaging host name).
 
+All changes of the fork are listed in [CHANGELOG-REBASED.md](CHANGELOG-REBASED.md).
+
 Licensed under the GNU General Public License version 2 or (at your option) version 3, like
 KeePassXC. The original README of KeePassXC follows.
 
