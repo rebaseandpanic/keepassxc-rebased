@@ -32,3 +32,9 @@ out/
 # vcpkg
 vcpkg_installed*/
 
+# Local AI-agent workspace files (KeePassXC Rebased)
+/CLAUDE*.md
+/docs/research/
+/docs/coderev/
+/.claude/
+/.mcp.json
