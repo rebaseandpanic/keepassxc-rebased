@@ -216,6 +216,15 @@ set(gui_SOURCES
         ../share/wizard/wizard.qrc
         rebased/OfficialInstanceGuard.cpp)
 
+# Keyboard layouts of the operating system (KeePassXC Rebased)
+if(APPLE)
+    list(APPEND gui_SOURCES rebased/KeyboardLayouts_mac.mm)
+elseif(WIN32)
+    list(APPEND gui_SOURCES rebased/KeyboardLayouts_win.cpp)
+else()
+    list(APPEND gui_SOURCES rebased/KeyboardLayouts_none.cpp)
+endif()
+
 if(APPLE)
     list(APPEND gui_SOURCES
             gui/osutils/macutils/DeviceListenerMac.cpp
