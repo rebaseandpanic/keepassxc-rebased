@@ -44,7 +44,13 @@ private slots:
     void testTotpSearch();
     void testKeyboardLayouts_data();
     void testKeyboardLayouts();
-    void testKeyboardLayoutsSearchTermParser();
+    void testKeyboardLayoutsFields_data();
+    void testKeyboardLayoutsFields();
+    void testKeyboardLayoutsWordsSubmitted_data();
+    void testKeyboardLayoutsWordsSubmitted();
+    void testKeyboardLayoutsSyntax_data();
+    void testKeyboardLayoutsSyntax();
+    void testKeyboardLayoutsProducedAsterisk();
     void testKeyboardLayoutsOff();
 
 private:

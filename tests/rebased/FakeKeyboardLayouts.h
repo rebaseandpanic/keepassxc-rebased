@@ -40,20 +40,20 @@ inline KeyboardLayout fakeKeyboardLayout(const QString& name, const QString& pla
     return layout;
 }
 
-// US English (QWERTY): digit row, letter rows and the punctuation keys among them
+// US English (QWERTY): digit row, letter rows and the punctuation keys among them, backslash after "]"
 inline KeyboardLayout fakeEnglishLayout()
 {
     return fakeKeyboardLayout(QStringLiteral("English"),
-                              QStringLiteral("`1234567890qwertyuiop[]asdfghjkl;'zxcvbnm,./"),
-                              QStringLiteral("~!@#$%^&*()QWERTYUIOP{}ASDFGHJKL:\"ZXCVBNM<>?"));
+                              QStringLiteral("`1234567890qwertyuiop[]\\asdfghjkl;'zxcvbnm,./"),
+                              QStringLiteral("~!@#$%^&*()QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?"));
 }
 
 // Russian (JCUKEN) on the same physical keys
 inline KeyboardLayout fakeRussianLayout()
 {
     return fakeKeyboardLayout(QStringLiteral("Russian"),
-                              QStringLiteral("ё1234567890йцукенгшщзхъфывапролджэячсмитьбю."),
-                              QStringLiteral("Ё!\"№;%:?*()ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,"));
+                              QStringLiteral("ё1234567890йцукенгшщзхъ\\фывапролджэячсмитьбю."),
+                              QStringLiteral("Ё!\"№;%:?*()ЙЦУКЕНГШЩЗХЪ/ФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,"));
 }
 
 #endif // KEEPASSXC_TEST_FAKEKEYBOARDLAYOUTS_H

@@ -65,7 +65,10 @@ public:
         QList<Alternative> alternatives;
     };
 
-    // Returns other spellings of a word typed in the search string
+    // Returns other spellings of a word typed in the search string. A variant keeps the
+    // word's characters at their positions; its wildcards (* ? |) act as such only where
+    // the word has them, any other character matches literally
+    // (see KeyboardLayoutTranslator::variantRegex)
     using WordVariants = std::function<QStringList(const QString& word)>;
 
     explicit EntrySearcher(bool caseSensitive = false, bool skipProtected = false);

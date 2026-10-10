@@ -21,6 +21,7 @@
 
 #include <QHash>
 #include <QList>
+#include <QRegularExpression>
 #include <QString>
 #include <QStringList>
 
@@ -47,6 +48,16 @@ public:
     // Variants equal to the word and repeated variants are left out; the order
     // follows the order of the layouts.
     QStringList variants(const QString& word) const;
+
+    // Regular expression for a variant of a search word, built like
+    // Tools::convertToRegex(variant, opts) with the variant taken as escaped text,
+    // except that '*', '?' and '|' act as wildcards (when opts enables them) only
+    // where the word has the same character at the same position, that is where
+    // the user typed it. Characters produced by the translation always match
+    // literally: "a&b" retyped into Russian is "ф?и", which must not match "фхи".
+    // variants() keeps every character of the word at its position; for a variant
+    // of another length every character is literal.
+    static QRegularExpression variantRegex(const QString& word, const QString& variant, int opts);
 
 private:
     struct Layout

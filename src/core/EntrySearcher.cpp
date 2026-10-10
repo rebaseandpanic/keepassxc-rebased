@@ -22,6 +22,7 @@
 #include "PasswordHealth.h"
 #include "core/Group.h"
 #include "core/Tools.h"
+#include "rebased/KeyboardLayoutTranslator.h"
 
 #include <algorithm>
 
@@ -373,7 +374,7 @@ void EntrySearcher::parseSearchTerms(const QString& searchString)
         if (m_wordVariants && !mods.contains("+") && !mods.contains("*") && term.field != Field::Password
             && term.field != Field::Is && term.field != Field::Has && term.field != Field::Uuid) {
             for (const auto& variant : m_wordVariants(typedWord)) {
-                term.alternatives.append({variant, Tools::convertToRegex(variant, opts)});
+                term.alternatives.append({variant, KeyboardLayoutTranslator::variantRegex(typedWord, variant, opts)});
             }
         }
 

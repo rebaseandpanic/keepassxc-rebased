@@ -17,6 +17,7 @@
 
 #include "TestKeyboardLayoutTranslator.h"
 
+#include "core/Tools.h"
 #include "rebased/FakeKeyboardLayouts.h"
 #include "rebased/KeyboardLayoutTranslator.h"
 
@@ -54,6 +55,8 @@ void TestKeyboardLayoutTranslator::testVariants_data()
     QTest::newRow("russian letters on english punctuation keys") << "[ktm" << QStringList{"хлеь"};
     QTest::newRow("digits kept") << "twitter2" << QStringList{"ецшееук2"};
     QTest::newRow("shifted digit differs") << "a@b" << QStringList{"ф\"и"};
+    QTest::newRow("shifted 7 becomes question mark") << "a&b" << QStringList{"ф?и"};
+    QTest::newRow("russian slash on the backslash key") << "ф/и" << QStringList{"a|b"};
     QTest::newRow("same text in every layout") << "12345" << QStringList{};
     QTest::newRow("mixed layouts") << "twitterй" << QStringList{};
     QTest::newRow("character on no key") << "tw€" << QStringList{};
@@ -140,4 +143,54 @@ void TestKeyboardLayoutTranslator::testKeysWithoutSingleCharacter()
     // A character outside the BMP counts as one character
     QCOMPARE(translator.variants(QString::fromUtf8("\xF0\x9F\x98\x80\xF0\x9F\x98\x80")), QStringList{"ss"});
     QCOMPARE(translator.variants(QString::fromUtf8("\xF0\x9F\x98\x80")), QStringList{});
+}
+
+void TestKeyboardLayoutTranslator::testVariantRegex_data()
+{
+    QTest::addColumn<QString>("word");
+    QTest::addColumn<QString>("variant");
+    QTest::addColumn<int>("opts");
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<bool>("matches");
+
+    const int wildcards = Tools::RegexConvertOpts::WILDCARD_ALL;
+    const int caseSensitive = wildcards | Tools::RegexConvertOpts::CASE_SENSITIVE;
+
+    QTest::newRow("produced ? literal") << "a&b"
+                                        << "ф?и" << wildcards << "фхи" << false;
+    QTest::newRow("produced ? matches itself") << "a&b"
+                                               << "ф?и" << wildcards << "xф?иx" << true;
+    QTest::newRow("typed ? wildcard") << "ф?и"
+                                      << "a?b" << wildcards << "axb" << true;
+    QTest::newRow("typed * wildcard") << "ец*ук"
+                                      << "tw*er" << wildcards << "twitter" << true;
+    QTest::newRow("produced * literal") << "axb"
+                                        << "a*b" << wildcards << "a-long-b" << false;
+    QTest::newRow("typed | alternation") << "ец|ук"
+                                         << "tw|er" << wildcards << "xxer" << true;
+    QTest::newRow("produced | literal") << "ф/и"
+                                        << "a|b" << wildcards << "alpha" << false;
+    QTest::newRow("regex characters literal") << "ab"
+                                              << "(." << wildcards << "xy" << false;
+    QTest::newRow("typed ? without wildcard option") << "ф?и"
+                                                     << "a?b" << 0 << "axb" << false;
+    QTest::newRow("case insensitive") << "ец"
+                                      << "tw" << wildcards << "TW" << true;
+    QTest::newRow("case sensitive") << "ец"
+                                    << "tw" << caseSensitive << "TW" << false;
+    QTest::newRow("exact") << "ец"
+                           << "tw" << (wildcards | Tools::RegexConvertOpts::EXACT_MATCH) << "twx" << false;
+    QTest::newRow("other length, all literal") << "ab?"
+                                               << "x?" << wildcards << "xy" << false;
+}
+
+void TestKeyboardLayoutTranslator::testVariantRegex()
+{
+    QFETCH(QString, word);
+    QFETCH(QString, variant);
+    QFETCH(int, opts);
+    QFETCH(QString, text);
+    QFETCH(bool, matches);
+
+    QCOMPARE(KeyboardLayoutTranslator::variantRegex(word, variant, opts).match(text).hasMatch(), matches);
 }

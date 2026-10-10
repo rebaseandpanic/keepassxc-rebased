@@ -522,30 +522,147 @@ void TestEntrySearcher::testKeyboardLayouts()
     QCOMPARE(titlesOf(m_entrySearcher.search(query, m_rootGroup)), titles);
 }
 
-void TestEntrySearcher::testKeyboardLayoutsSearchTermParser()
+void TestEntrySearcher::testKeyboardLayoutsFields_data()
 {
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<QStringList>("titles");
+
+    // Entries (see testKeyboardLayoutsFields), each with "twitter" in one field only
+    QTest::newRow("title") << "title:ецшееук" << QStringList{"twitter"};
+    QTest::newRow("custom attribute value, key as typed") << "_code:ецшееук" << QStringList{"attribute"};
+    QTest::newRow("custom attribute key not translated") << "_сщву:ецшееук" << QStringList{};
+    QTest::newRow("attributes") << "attr:ецшееук" << QStringList{"attribute"};
+    QTest::newRow("group") << "group:ецшееук" << QStringList{"in group"};
+    QTest::newRow("tag") << "tag:ецшееук" << QStringList{"tagged"};
+    QTest::newRow("attachment") << "attachment:ецшееук" << QStringList{"attached"};
+    QTest::newRow("password not translated") << "pw:ецшееук" << QStringList{};
+    QTest::newRow("password long form not translated") << "password:ецшееук" << QStringList{};
+    QTest::newRow("password as typed") << "pw:twitter" << QStringList{"password"};
+}
+
+void TestEntrySearcher::testKeyboardLayoutsFields()
+{
+    QFETCH(QString, query);
+    QFETCH(QStringList, titles);
+
+    const auto addEntry = [this](const QString& title) {
+        auto entry = new Entry();
+        entry->setGroup(m_rootGroup);
+        entry->setTitle(title);
+        return entry;
+    };
+    addEntry("twitter");
+    addEntry("password")->setPassword("twitter");
+    addEntry("attribute")->attributes()->set("code", "twitter");
+    addEntry("tagged")->setTags("twitter");
+    addEntry("attached")->attachments()->set("twitter.txt", QByteArray("data"));
+    auto group = new Group();
+    group->setName("twitter");
+    group->setParent(m_rootGroup);
+    addEntry("in group")->setGroup(group);
+
     m_entrySearcher.setWordVariants(englishRussianVariants());
+    QCOMPARE(titlesOf(m_entrySearcher.search(query, m_rootGroup)), titles);
+}
 
-    m_entrySearcher.parseSearchTerms("ецшееук title:ецшееук -ецшееук _attr:ецшееук group:ецшееук");
-    auto terms = m_entrySearcher.m_searchTerms;
-    QCOMPARE(terms.length(), 5);
-    for (const auto& term : terms) {
-        QCOMPARE(term.alternatives.size(), 1);
-        QCOMPARE(term.alternatives.first().word, QString("twitter"));
-    }
-    // The field prefix and the modifiers stay as typed
-    QCOMPARE(terms[1].field, EntrySearcher::Field::Title);
-    QCOMPARE(terms[2].exclude, true);
-    QCOMPARE(terms[3].field, EntrySearcher::Field::AttributeValue);
-    QCOMPARE(terms[3].word, QString("attr"));
+void TestEntrySearcher::testKeyboardLayoutsWordsSubmitted_data()
+{
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<QStringList>("submitted");
 
-    m_entrySearcher.parseSearchTerms(
-        "+ецшееук *ецшееук pw:ецшееук password:ецшееук is:ецшееук has:ецшееук uuid:ецшееук у");
-    terms = m_entrySearcher.m_searchTerms;
-    QCOMPARE(terms.length(), 8);
-    for (const auto& term : terms) {
-        QVERIFY2(term.alternatives.isEmpty(), qPrintable(term.word));
+    QTest::newRow("plain word") << "abc" << QStringList{"abc"};
+    QTest::newRow("field prefix stripped") << "title:abc" << QStringList{"abc"};
+    QTest::newRow("exclude with -") << "-abc" << QStringList{"abc"};
+    QTest::newRow("exclude with !") << "!abc" << QStringList{"abc"};
+    QTest::newRow("custom attribute value") << "_code:abc" << QStringList{"abc"};
+    QTest::newRow("quoted word") << "\"ab cd\"" << QStringList{"ab cd"};
+    QTest::newRow("username") << "u:abc" << QStringList{"abc"};
+    QTest::newRow("url") << "url:abc" << QStringList{"abc"};
+    QTest::newRow("notes") << "notes:abc" << QStringList{"abc"};
+    QTest::newRow("group") << "group:abc" << QStringList{"abc"};
+    QTest::newRow("tag") << "tag:abc" << QStringList{"abc"};
+    QTest::newRow("attachment") << "attachment:abc" << QStringList{"abc"};
+    QTest::newRow("attributes") << "attr:abc" << QStringList{"abc"};
+    QTest::newRow("exact") << "+abc" << QStringList{};
+    QTest::newRow("regex") << "*abc" << QStringList{};
+    QTest::newRow("excluded exact") << "-+abc" << QStringList{};
+    QTest::newRow("password") << "pw:abc" << QStringList{};
+    QTest::newRow("password long form") << "password:abc" << QStringList{};
+    QTest::newRow("is") << "is:expired" << QStringList{};
+    QTest::newRow("has") << "has:totp" << QStringList{};
+    QTest::newRow("uuid") << "uuid:abc" << QStringList{};
+    QTest::newRow("mixed query") << "abc +def pw:ghi -jkl uuid:mno" << QStringList{"abc", "jkl"};
+}
+
+void TestEntrySearcher::testKeyboardLayoutsWordsSubmitted()
+{
+    QFETCH(QString, query);
+    QFETCH(QStringList, submitted);
+
+    QStringList words;
+    m_entrySearcher.setWordVariants([&words](const QString& word) {
+        words.append(word);
+        return QStringList{};
+    });
+    m_entrySearcher.search(query, m_rootGroup);
+    QCOMPARE(words, submitted);
+}
+
+void TestEntrySearcher::testKeyboardLayoutsSyntax_data()
+{
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<QStringList>("titles");
+
+    // English Shift+7 "&" is "?" in Russian, Russian Shift+backslash "/" is "|" in English:
+    // characters produced by retyping are literal, not wildcards
+    QTest::newRow("produced ? is literal") << "a&b" << QStringList{"ф?и"};
+    QTest::newRow("produced ? is literal, excluded")
+        << "-a&b" << QStringList{"a|b", "alpha", "twitter", "search engine", "ф/и", "фхи"};
+    QTest::newRow("produced | is literal") << "ф/и" << QStringList{"a|b", "ф/и"};
+    QTest::newRow("produced | is literal, excluded")
+        << "-ф/и" << QStringList{"alpha", "twitter", "search engine", "ф?и", "фхи"};
+    // Wildcards typed by the user keep their meaning in the variants
+    QTest::newRow("typed ? stays a wildcard") << "ф?и" << QStringList{"a|b", "ф/и", "ф?и", "фхи"};
+    QTest::newRow("typed ? in retyped word") << "е?шееук" << QStringList{"twitter"};
+    QTest::newRow("typed * in retyped word") << "ец*ук" << QStringList{"twitter"};
+    QTest::newRow("typed | in retyped words") << "ецшееук|ыуфкср" << QStringList{"search engine", "twitter"};
+}
+
+void TestEntrySearcher::testKeyboardLayoutsSyntax()
+{
+    QFETCH(QString, query);
+    QFETCH(QStringList, titles);
+
+    for (const auto& title : {"фхи", "ф?и", "ф/и", "a|b", "alpha", "twitter", "search engine"}) {
+        auto entry = new Entry();
+        entry->setGroup(m_rootGroup);
+        entry->setTitle(title);
     }
+
+    m_entrySearcher.setWordVariants(englishRussianVariants());
+    auto expected = titles;
+    expected.sort();
+    QCOMPARE(titlesOf(m_entrySearcher.search(query, m_rootGroup)), expected);
+}
+
+void TestEntrySearcher::testKeyboardLayoutsProducedAsterisk()
+{
+    // Layout B has "*" on the key where layout A has "x"
+    KeyboardLayout a;
+    a.keys = {{0, "x"}, {2, "a"}, {4, "b"}};
+    KeyboardLayout b;
+    b.keys = {{0, "*"}, {2, "a"}, {4, "b"}};
+    const KeyboardLayoutTranslator translator({a, b}, 2, QStringLiteral("*?| "));
+    m_entrySearcher.setWordVariants([translator](const QString& word) { return translator.variants(word); });
+
+    for (const auto& title : {"a*b", "a-long-b"}) {
+        auto entry = new Entry();
+        entry->setGroup(m_rootGroup);
+        entry->setTitle(title);
+    }
+
+    QCOMPARE(titlesOf(m_entrySearcher.search("axb", m_rootGroup)), QStringList{"a*b"});
+    QCOMPARE(titlesOf(m_entrySearcher.search("-axb", m_rootGroup)), QStringList{"a-long-b"});
 }
 
 void TestEntrySearcher::testKeyboardLayoutsOff()

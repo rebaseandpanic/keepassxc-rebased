@@ -32,6 +32,8 @@ private slots:
     void testDuplicateVariantsAcrossLayouts();
     void testFirstKeyWinsForRepeatedCharacter();
     void testKeysWithoutSingleCharacter();
+    void testVariantRegex_data();
+    void testVariantRegex();
 };
 
 #endif // KEEPASSXC_TESTKEYBOARDLAYOUTTRANSLATOR_H

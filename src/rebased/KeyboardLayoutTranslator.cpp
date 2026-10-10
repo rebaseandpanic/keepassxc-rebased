@@ -17,6 +17,8 @@
 
 #include "KeyboardLayoutTranslator.h"
 
+#include "core/Tools.h"
+
 #include <algorithm>
 
 namespace
@@ -99,4 +101,50 @@ QStringList KeyboardLayoutTranslator::variants(const QString& word) const
         }
     }
     return result;
+}
+
+QRegularExpression KeyboardLayoutTranslator::variantRegex(const QString& word, const QString& variant, int opts)
+{
+    const auto typed = codePoints(word);
+    const auto chars = codePoints(variant);
+    const bool aligned = typed.size() == chars.size();
+
+    // Wildcard replacement of each wildcard character, as in Tools::convertToRegex
+    const auto wildcard = [opts](char32_t ch) -> QString {
+        if (ch == '*' && (opts & Tools::RegexConvertOpts::WILDCARD_UNLIMITED_MATCH)) {
+            return QStringLiteral(".*");
+        }
+        if (ch == '?' && (opts & Tools::RegexConvertOpts::WILDCARD_SINGLE_MATCH)) {
+            return QStringLiteral(".");
+        }
+        if (ch == '|' && (opts & Tools::RegexConvertOpts::WILDCARD_LOGICAL_OR)) {
+            return QStringLiteral("|");
+        }
+        return {};
+    };
+
+    QString pattern;
+    QString literal;
+    for (qsizetype i = 0; i < chars.size(); ++i) {
+        const auto ch = chars.at(i);
+        const auto replacement = aligned && typed.at(i) == ch ? wildcard(ch) : QString();
+        if (replacement.isEmpty()) {
+            literal.append(QString::fromUcs4(&ch, 1));
+            continue;
+        }
+        pattern.append(Tools::escapeRegex(literal));
+        literal.clear();
+        pattern.append(replacement);
+    }
+    pattern.append(Tools::escapeRegex(literal));
+
+    if (opts & Tools::RegexConvertOpts::EXACT_MATCH) {
+        pattern = "^(?:" + pattern + ")$";
+    }
+
+    QRegularExpression regex(pattern);
+    if ((opts & Tools::RegexConvertOpts::CASE_SENSITIVE) != Tools::RegexConvertOpts::CASE_SENSITIVE) {
+        regex.setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+    }
+    return regex;
 }
