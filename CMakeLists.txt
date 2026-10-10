@@ -136,7 +136,8 @@ endif()
 
 string(REGEX REPLACE "(\r?\n)+" "" OVERRIDE_VERSION "${OVERRIDE_VERSION}")
 if(OVERRIDE_VERSION)
-    if(OVERRIDE_VERSION MATCHES "^[\\.0-9]+$")
+    # Fork releases are tagged X.Y.Z-rebasedN
+    if(OVERRIDE_VERSION MATCHES "^[\\.0-9]+(-rebased[0-9]+)?$")
         set(KEEPASSXC_BUILD_TYPE "Release")
     else()
         set(KEEPASSXC_BUILD_TYPE "Snapshot")

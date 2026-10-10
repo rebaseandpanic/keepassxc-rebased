@@ -13,6 +13,7 @@ Differences from KeePassXC:
 * Application name, macOS bundle identifier (`io.github.rebaseandpanic.keepassxc-rebased`) and,
   on macOS and Windows, settings location are separate, so the fork does not touch the settings of
   an official installation there. On Linux both share `~/.config/keepassxc`.
+* Update checks look for releases of this fork.
 * The KeePassXC-Browser extension works unchanged (same native messaging host name).
 
 Licensed under the GNU General Public License version 2 or (at your option) version 3, like

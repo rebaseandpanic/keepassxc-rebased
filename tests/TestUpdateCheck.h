@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2019 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,6 +28,7 @@ class TestUpdateCheck : public QObject
 private slots:
     void initTestCase();
     void testCompareVersion();
+    void testCompareRebasedVersion();
 };
 
 #endif // #define KEEPASSX_TESTUPDATECHECK_H

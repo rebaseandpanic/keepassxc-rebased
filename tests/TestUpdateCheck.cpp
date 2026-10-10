@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -59,4 +60,25 @@ void TestUpdateCheck::testCompareVersion()
     QCOMPARE(UpdateChecker::compareVersions(QString("2.3.4-snapshot"), QString("2.4.0")), false);
     QCOMPARE(UpdateChecker::compareVersions(QString("2.4.0"), QString("invalid")), false);
     QCOMPARE(UpdateChecker::compareVersions(QString("2.4.0"), QString("")), false);
+}
+
+void TestUpdateCheck::testCompareRebasedVersion()
+{
+    // Next fork release on the same upstream base
+    QCOMPARE(UpdateChecker::compareVersions(QString("2.8.0-rebased1"), QString("2.8.0-rebased2")), true);
+    QCOMPARE(UpdateChecker::compareVersions(QString("2.8.0-rebased2"), QString("2.8.0-rebased1")), false);
+    QCOMPARE(UpdateChecker::compareVersions(QString("2.8.0-rebased1"), QString("2.8.0-rebased1")), false);
+    // Release numbers are compared as numbers, not as text
+    QCOMPARE(UpdateChecker::compareVersions(QString("2.8.0-rebased9"), QString("2.8.0-rebased10")), true);
+    QCOMPARE(UpdateChecker::compareVersions(QString("2.8.0-rebased10"), QString("2.8.0-rebased9")), false);
+
+    // New upstream base
+    QCOMPARE(UpdateChecker::compareVersions(QString("2.8.0-rebased3"), QString("2.9.0-rebased1")), true);
+    QCOMPARE(UpdateChecker::compareVersions(QString("2.9.0-rebased1"), QString("2.8.0-rebased3")), false);
+
+    // Own version numbers without a suffix
+    QCOMPARE(UpdateChecker::compareVersions(QString("2.9.0-rebased1"), QString("3.0.0")), true);
+
+    // Snapshot builds of the fork are not checked
+    QCOMPARE(UpdateChecker::compareVersions(QString("2.8.0-snapshot"), QString("2.8.0-rebased1")), false);
 }

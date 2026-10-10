@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2019 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@
 #include "ui_UpdateCheckDialog.h"
 
 #include <QPushButton>
+#include <QUrl>
 
 #include "config-keepassx.h"
 #include "gui/Icons.h"
@@ -53,8 +55,12 @@ void UpdateCheckDialog::showUpdateCheckResponse(bool hasUpdate, const QString& v
     } else if (hasUpdate) {
         m_ui->statusLabel->setText(
             tr("<strong>A new version is available.</strong><br/>"
-               "KeePassXC %1 can be <a href=\"https://keepassxc.org/download/\">downloaded here</a>.")
-                .arg(version, KEEPASSXC_VERSION));
+               "%1 %2 can be <a href=\"%3\">downloaded here</a>.")
+                .arg(KEEPASSXC_APP_NAME,
+                     version,
+                     // The release of the offered version, also when it is a prerelease
+                     QStringLiteral("https://github.com/rebaseandpanic/keepassxc-rebased/releases/tag/")
+                         + QString::fromLatin1(QUrl::toPercentEncoding(version))));
     } else {
         m_ui->statusLabel->setText(tr("You have the latest version of KeePassXC"));
     }
