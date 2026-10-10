@@ -2,6 +2,7 @@
  *  Copyright (C) 2012 Tobias Tangemann
  *  Copyright (C) 2012 Felix Geyer <debfx@fobos.de>
  *  Copyright (C) 2020 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -65,8 +66,8 @@ Application::Application(int& argc, char** argv)
     registerUnixSignals();
 #endif
 
-    // Build identifier
-    auto identifier = QStringLiteral("keepassxc");
+    // Build identifier; distinct from the official KeePassXC (see rebased/OfficialInstanceGuard.h)
+    auto identifier = QStringLiteral("keepassxc-rebased");
     auto username = Tools::cleanUsername();
     if (!username.isEmpty()) {
         identifier += QChar('-') + username;
@@ -291,10 +292,20 @@ void Application::quitBySignal()
 }
 #endif
 
+void Application::listenForOtherInstances(QLocalServer* server)
+{
+    connect(server, SIGNAL(newConnection()), this, SIGNAL(anotherInstanceStarted()));
+    connect(server, SIGNAL(newConnection()), this, SLOT(processIncomingConnection()));
+}
+
 void Application::processIncomingConnection()
 {
-    if (m_lockServer.hasPendingConnections()) {
-        QLocalSocket* socket = m_lockServer.nextPendingConnection();
+    auto server = qobject_cast<QLocalServer*>(sender());
+    if (!server) {
+        server = &m_lockServer;
+    }
+    if (server->hasPendingConnections()) {
+        QLocalSocket* socket = server->nextPendingConnection();
         socket->setProperty(BlockSizeProperty, 0);
         connect(socket, SIGNAL(readyRead()), this, SLOT(socketReadyRead()));
     }

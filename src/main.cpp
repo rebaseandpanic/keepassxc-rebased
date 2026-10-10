@@ -31,6 +31,7 @@
 #include "gui/MainWindow.h"
 #include "gui/MessageBox.h"
 #include "gui/osutils/OSUtils.h"
+#include "rebased/OfficialInstanceGuard.h"
 
 #if defined(WITH_ASAN) && defined(WITH_LSAN)
 #include <sanitizer/lsan_interface.h>
@@ -178,6 +179,27 @@ int main(int argc, char** argv)
         // still return with EXIT_SUCCESS because when used within a script for ensuring that there is no unlocked
         // keepass database (e.g. screen locking) we can consider it as successful
         return EXIT_SUCCESS;
+    }
+
+    OfficialInstanceGuard officialInstanceGuard(OfficialInstanceGuard::officialLockFilePath(),
+                                                OfficialInstanceGuard::officialServerName());
+    switch (officialInstanceGuard.acquire()) {
+    case OfficialInstanceGuard::Result::Acquired:
+        app.listenForOtherInstances(officialInstanceGuard.server());
+        break;
+    case OfficialInstanceGuard::Result::OfficialRunning:
+        MessageBox::critical(nullptr,
+                             QObject::tr("%1 - Error").arg(KEEPASSXC_APP_NAME),
+                             QObject::tr("%1 cannot run while the official KeePassXC is running.\n"
+                                         "Close KeePassXC and start %1 again.")
+                                 .arg(KEEPASSXC_APP_NAME));
+        return EXIT_FAILURE;
+    case OfficialInstanceGuard::Result::Unavailable:
+        qWarning() << QObject::tr("Cannot guard against a running official KeePassXC: %1")
+                          .arg(officialInstanceGuard.errorString())
+                          .toUtf8()
+                          .constData();
+        break;
     }
 
     if (!Crypto::init()) {

@@ -14,6 +14,8 @@ Differences from KeePassXC:
   on macOS and Windows, settings location are separate, so the fork does not touch the settings of
   an official installation there. On Linux both share `~/.config/keepassxc`.
 * Update checks look for releases of this fork.
+* The fork and the official KeePassXC never run at the same time: the fork refuses to start while
+  the official one is running, and an official KeePassXC started later hands over to the running fork.
 * The KeePassXC-Browser extension works unchanged (same native messaging host name).
 
 Licensed under the GNU General Public License version 2 or (at your option) version 3, like

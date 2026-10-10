@@ -1,5 +1,6 @@
 #  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
 #  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
+#  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -153,6 +154,14 @@ add_unit_test(NAME testsharing SOURCES TestSharing.cpp
 
 add_unit_test(NAME testdatabase SOURCES TestDatabase.cpp
         LIBS testsupport ${TEST_LIBRARIES})
+
+add_executable(testofficialinstance-holder rebased/OfficialInstanceHolder.cpp)
+target_link_libraries(testofficialinstance-holder Qt6::Core)
+add_unit_test(NAME testofficialinstanceguard SOURCES TestOfficialInstanceGuard.cpp
+        LIBS ${TEST_LIBRARIES})
+target_compile_definitions(testofficialinstanceguard PRIVATE
+        OFFICIAL_INSTANCE_HOLDER="$<TARGET_FILE:testofficialinstance-holder>")
+add_dependencies(testofficialinstanceguard testofficialinstance-holder)
 
 add_unit_test(NAME testtools SOURCES TestTools.cpp
         LIBS testsupport ${TEST_LIBRARIES})

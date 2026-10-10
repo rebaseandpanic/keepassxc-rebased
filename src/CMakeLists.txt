@@ -213,7 +213,8 @@ set(gui_SOURCES
         gui/wizard/NewDatabaseWizardPageDatabaseKey.cpp
         quickunlock/QuickUnlockInterface.cpp
         ../share/icons/icons.qrc
-        ../share/wizard/wizard.qrc)
+        ../share/wizard/wizard.qrc
+        rebased/OfficialInstanceGuard.cpp)
 
 if(APPLE)
     list(APPEND gui_SOURCES

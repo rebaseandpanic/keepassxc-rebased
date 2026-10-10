@@ -2,6 +2,7 @@
  *  Copyright (C) 2012 Tobias Tangemann
  *  Copyright (C) 2012 Felix Geyer <debfx@fobos.de>
  *  Copyright (C) 2020 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -52,6 +53,8 @@ public:
 
     bool sendFileNamesToRunningInstance(const QStringList& fileNames);
     bool sendLockToInstance();
+    // Handle instances connecting to an additional single-instance endpoint like to our own
+    void listenForOtherInstances(QLocalServer* server);
 
     void restart();
 
