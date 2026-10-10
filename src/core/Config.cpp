@@ -243,7 +243,8 @@ static const QHash<Config::ConfigKey, ConfigDirective> configStrings = {
 
     // KeePassXC Rebased
     {Config::Rebased_SearchAllKeyboardLayouts, {QS("Rebased/SearchAllKeyboardLayouts"), Roaming, true}},
-    {Config::Rebased_SearchKeyboardLayoutsMinimumLength, {QS("Rebased/SearchKeyboardLayoutsMinimumLength"), Roaming, 2}}};
+    {Config::Rebased_SearchKeyboardLayoutsMinimumLength, {QS("Rebased/SearchKeyboardLayoutsMinimumLength"), Roaming, 2}},
+    {Config::Rebased_QuickUnlockAutoPrompt, {QS("Rebased/QuickUnlockAutoPrompt"), Local, true}}};
 
 // clang-format on
 

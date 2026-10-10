@@ -1,5 +1,6 @@
 /*
 *  Copyright (C) 2025 KeePassXC Team <team@keepassxc.org>
+*  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
 *
 *  This program is free software: you can redistribute it and/or modify
 *  it under the terms of the GNU General Public License as published by
@@ -21,6 +22,7 @@
 #include "crypto/SymmetricCipher.h"
 #include "crypto/CryptoHash.h"
 #include "config-keepassx.h"
+#include "core/AsyncTask.h"
 
 #include <botan/mem_ops.h>
 
@@ -255,6 +257,10 @@ bool TouchID::getKey(const QUuid& dbUuid, QByteArray& passwordKey)
         return false;
     }
 
+    // Copy of the stored key: the stored keys stay on the GUI thread, which keeps
+    // running while the prompt is shown
+    const QByteArray encryptedMasterKey = m_encryptedMasterKeys.value(dbUuid);
+
     // query the KeyChain for the AES key
     CFMutableDictionaryRef query = makeDictionary();
 
@@ -270,9 +276,25 @@ bool TouchID::getKey(const QUuid& dbUuid, QByteArray& passwordKey)
     CFDictionarySetValue(query, kSecUseOperationPrompt, (__bridge CFStringRef) touchPromptMessage);
 
     // get data from the KeyChain
+    // SecItemCopyMatching blocks the calling thread while the Touch ID prompt is shown:
+    // run it on a background thread and keep the event loop of the GUI thread running,
+    // so the application does not hang. The query is not changed meanwhile.
     CFTypeRef dataTypeRef = NULL;
-    OSStatus status = SecItemCopyMatching(query, &dataTypeRef);
+    OSStatus status = AsyncTask::runAndWaitForFuture([query, &dataTypeRef]() -> OSStatus {
+        @autoreleasepool {
+            return SecItemCopyMatching(query, &dataTypeRef);
+        }
+    });
     CFRelease(query);
+
+    if (!hasKey(dbUuid)) {
+        // Quick Unlock of this database was reset while the prompt was shown
+        if (dataTypeRef != NULL) {
+            CFRelease(dataTypeRef);
+        }
+        debug("TouchID::getKey - Stored key was reset during authentication");
+        return false;
+    }
 
     if (status == errSecUserCanceled) {
         // user canceled the authentication, return true with empty key
@@ -299,7 +321,7 @@ bool TouchID::getKey(const QUuid& dbUuid, QByteArray& passwordKey)
     }
 
     // decrypt PasswordKey from memory using AES
-    passwordKey = m_encryptedMasterKeys[dbUuid];
+    passwordKey = encryptedMasterKey;
     if (!aes256Decrypt.finish(passwordKey)) {
         passwordKey.clear();
         debug("TouchID::getKey - AES decrypt failed: %s", aes256Decrypt.errorString().toUtf8().constData());

@@ -216,6 +216,7 @@ public:
 
         Rebased_SearchAllKeyboardLayouts,
         Rebased_SearchKeyboardLayoutsMinimumLength,
+        Rebased_QuickUnlockAutoPrompt,
 
         // Special internal value
         Deleted

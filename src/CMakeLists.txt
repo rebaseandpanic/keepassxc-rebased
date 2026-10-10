@@ -50,6 +50,7 @@ set(core_SOURCES
         core/Totp.cpp
         core/Translator.cpp
         rebased/KeyboardLayoutTranslator.cpp
+        rebased/QuickUnlockAutoPrompt.cpp
         cli/Utils.cpp
         crypto/Crypto.cpp
         crypto/CryptoHash.cpp
@@ -216,7 +217,8 @@ set(gui_SOURCES
         ../share/icons/icons.qrc
         ../share/wizard/wizard.qrc
         rebased/KeyboardLayoutSearch.cpp
-        rebased/OfficialInstanceGuard.cpp)
+        rebased/OfficialInstanceGuard.cpp
+        rebased/QuickUnlockAutoPromptSettings.cpp)
 
 # Keyboard layouts of the operating system (KeePassXC Rebased)
 if(APPLE)

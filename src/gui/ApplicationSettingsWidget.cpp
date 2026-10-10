@@ -39,6 +39,7 @@
 #include "quickunlock/QuickUnlockInterface.h"
 #include "rebased/KeyboardLayoutSearch.h"
 #include "rebased/KeyboardLayouts.h"
+#include "rebased/QuickUnlockAutoPromptSettings.h"
 
 #include "FileDialog.h"
 #include "MessageBox.h"
@@ -238,6 +239,15 @@ ApplicationSettingsWidget::ApplicationSettingsWidget(QWidget* parent)
         auto* layout = m_generalUi->verticalLayout_8;
         layout->insertWidget(layout->indexOf(m_generalUi->entryGroup) + 1, m_keyboardLayoutSearchSettings);
     }
+
+    // Automatic quick unlock prompt (KeePassXC Rebased), under the quick unlock option
+    m_quickUnlockAutoPromptSettings = new QuickUnlockAutoPromptSettingsWidget();
+    auto* lockLayout = m_secUi->verticalLayout_4;
+    lockLayout->insertWidget(lockLayout->indexOf(m_secUi->quickUnlockCheckBox) + 1, m_quickUnlockAutoPromptSettings);
+    setTabOrder(m_secUi->quickUnlockCheckBox, m_quickUnlockAutoPromptSettings);
+    connect(m_secUi->quickUnlockCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
+        m_quickUnlockAutoPromptSettings->setQuickUnlockEnabled(checked && m_secUi->quickUnlockCheckBox->isEnabled());
+    });
 }
 
 ApplicationSettingsWidget::~ApplicationSettingsWidget() = default;
@@ -428,6 +438,9 @@ void ApplicationSettingsWidget::loadSettings()
 
     m_secUi->quickUnlockCheckBox->setEnabled(getQuickUnlock()->isAvailable());
     m_secUi->quickUnlockCheckBox->setChecked(config()->get(Config::Security_QuickUnlock).toBool());
+    m_quickUnlockAutoPromptSettings->loadSettings();
+    m_quickUnlockAutoPromptSettings->setQuickUnlockEnabled(m_secUi->quickUnlockCheckBox->isEnabled()
+                                                           && m_secUi->quickUnlockCheckBox->isChecked());
 
     if (m_keyboardLayoutSearchSettings) {
         m_keyboardLayoutSearchSettings->loadSettings();
@@ -571,6 +584,7 @@ void ApplicationSettingsWidget::saveSettings()
     if (m_secUi->quickUnlockCheckBox->isEnabled()) {
         config()->set(Config::Security_QuickUnlock, m_secUi->quickUnlockCheckBox->isChecked());
     }
+    m_quickUnlockAutoPromptSettings->saveSettings();
 
     // Security: clear storage if related settings are disabled
     if (!config()->get(Config::RememberLastDatabases).toBool()) {

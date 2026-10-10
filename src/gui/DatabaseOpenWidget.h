@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2011 Felix Geyer <debfx@fobos.de>
  *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +27,7 @@
 #include "gui/DialogyWidget.h"
 #include "gui/MessageWidget.h"
 #include "osutils/DeviceListener.h"
+#include "rebased/QuickUnlockAutoPrompt.h"
 
 class CompositeKey;
 class Database;
@@ -82,6 +84,7 @@ private slots:
     void closeDatabase();
     void pollHardwareKey(bool manualTrigger = false, int delay = 0);
     void hardwareKeyResponse(bool found);
+    void quickUnlockAutoPrompt();
 
 private:
     QPointer<DeviceListener> m_deviceListener;
@@ -92,6 +95,7 @@ private:
     bool m_triedToQuit = false;
     QTimer m_hideTimer;
     QTimer m_hideNoHardwareKeysFoundTimer;
+    QuickUnlockAutoPrompt m_quickUnlockAutoPrompt;
 
     Q_DISABLE_COPY(DatabaseOpenWidget)
 };

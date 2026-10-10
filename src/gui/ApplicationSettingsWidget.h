@@ -29,6 +29,7 @@ namespace Ui
 } // namespace Ui
 
 class KeyboardLayoutSearchSettingsWidget;
+class QuickUnlockAutoPromptSettingsWidget;
 
 class ISettingsPage
 {
@@ -79,6 +80,7 @@ private:
     class ExtraPage;
     QList<ExtraPage> m_extraPages;
     KeyboardLayoutSearchSettingsWidget* m_keyboardLayoutSearchSettings = nullptr;
+    QuickUnlockAutoPromptSettingsWidget* m_quickUnlockAutoPromptSettings = nullptr;
 };
 
 #endif // KEEPASSX_SETTINGSWIDGET_H

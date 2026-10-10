@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2011 Felix Geyer <debfx@fobos.de>
  *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -182,10 +183,14 @@ bool DatabaseOpenWidget::event(QEvent* event)
     auto type = event->type();
 
     if (type == QEvent::Show || type == QEvent::WindowActivate) {
-        if (isOnQuickUnlockScreen() && (m_db.isNull() || !canPerformQuickUnlock())) {
-            resetQuickUnlock();
+        // The event loop keeps running while unlocking (the Quick Unlock prompt, the KDF):
+        // keep the screen and the database of the running unlock as they are
+        if (!unlockingDatabase()) {
+            if (isOnQuickUnlockScreen() && (m_db.isNull() || !canPerformQuickUnlock())) {
+                resetQuickUnlock();
+            }
+            toggleQuickUnlockScreen();
         }
-        toggleQuickUnlockScreen();
 
         if (type == QEvent::Show) {
 #ifdef Q_OS_WIN
@@ -210,6 +215,11 @@ bool DatabaseOpenWidget::event(QEvent* event)
             pollHardwareKey();
         }
 
+        if (type == QEvent::Show ? m_quickUnlockAutoPrompt.shown(isActiveWindow())
+                                 : m_quickUnlockAutoPrompt.windowActivated()) {
+            QTimer::singleShot(QuickUnlockAutoPrompt::Delay, this, &DatabaseOpenWidget::quickUnlockAutoPrompt);
+        }
+
         ret = true;
     } else if (type == QEvent::Hide || type == QEvent::WindowDeactivate) {
         // Schedule form clearing if we are hidden
@@ -219,6 +229,9 @@ bool DatabaseOpenWidget::event(QEvent* event)
 
         if (type == QEvent::Hide) {
             m_deviceListener->deregisterAllHotplugCallbacks();
+            m_quickUnlockAutoPrompt.hidden();
+        } else {
+            m_quickUnlockAutoPrompt.windowDeactivated();
         }
 
         ret = true;
@@ -424,6 +437,7 @@ QSharedPointer<CompositeKey> DatabaseOpenWidget::buildDatabaseKey()
     if (!m_db.isNull() && canPerformQuickUnlock()) {
         // try to retrieve the stored password using Windows Hello
         QByteArray keyData;
+        const QuickUnlockAutoPrompt::Attempt quickUnlockAttempt;
         if (!getQuickUnlock()->getKey(m_db->publicUuid(), keyData)) {
             m_ui->messageWidget->showMessage(
                 tr("Failed to authenticate with Quick Unlock: %1").arg(getQuickUnlock()->errorString()),
@@ -636,6 +650,22 @@ void DatabaseOpenWidget::toggleQuickUnlockScreen()
         if (m_ui->editPassword->isVisible()) {
             m_ui->editPassword->setFocus();
         }
+    }
+}
+
+/**
+ * Prompt for Quick Unlock on its own (KeePassXC Rebased), scheduled by event()
+ * once per appearance of the Quick Unlock screen in the main window.
+ * The unlock dialog prompts on its own in DatabaseOpenDialog::showEvent().
+ */
+void DatabaseOpenWidget::quickUnlockAutoPrompt()
+{
+    QuickUnlockAutoPrompt::State state;
+    state.enabled = config()->get(Config::Rebased_QuickUnlockAutoPrompt).toBool() && window() == getMainWindow();
+    state.quickUnlockPossible = isOnQuickUnlockScreen() && canPerformQuickUnlock();
+    state.unlocking = unlockingDatabase();
+    if (m_quickUnlockAutoPrompt.promptNow(state)) {
+        triggerQuickUnlock();
     }
 }
 
