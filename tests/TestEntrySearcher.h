@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2014 Florian Geyer <blueice@fobos.de>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,6 +42,10 @@ private slots:
     void testSkipProtected();
     void testUUIDSearch();
     void testTotpSearch();
+    void testKeyboardLayouts_data();
+    void testKeyboardLayouts();
+    void testKeyboardLayoutsSearchTermParser();
+    void testKeyboardLayoutsOff();
 
 private:
     Group* m_rootGroup;

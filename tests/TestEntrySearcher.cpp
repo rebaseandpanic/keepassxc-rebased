@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2014 Florian Geyer <blueice@fobos.de>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +21,8 @@
 #include "core/Group.h"
 #include "core/Tools.h"
 #include "core/Totp.h"
+#include "rebased/FakeKeyboardLayouts.h"
+#include "rebased/KeyboardLayoutTranslator.h"
 
 #include <QTest>
 
@@ -449,4 +452,120 @@ void TestEntrySearcher::testTotpSearch()
     QVERIFY(m_searchResult.contains(entry1));
     QVERIFY(!m_searchResult.contains(entry2));
     QVERIFY(!m_searchResult.contains(entry3));
+}
+
+namespace
+{
+    // Search in all keyboard layouts as the search bar sets it up, with English and Russian installed
+    EntrySearcher::WordVariants englishRussianVariants()
+    {
+        const KeyboardLayoutTranslator translator(
+            {fakeEnglishLayout(), fakeRussianLayout()}, 2, QStringLiteral("*?| "));
+        return [translator](const QString& word) { return translator.variants(word); };
+    }
+
+    QStringList titlesOf(const QList<Entry*>& entries)
+    {
+        QStringList titles;
+        for (const auto* entry : entries) {
+            titles.append(entry->title());
+        }
+        titles.sort();
+        return titles;
+    }
+} // namespace
+
+void TestEntrySearcher::testKeyboardLayouts_data()
+{
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<QStringList>("titles");
+
+    // Entries (see testKeyboardLayouts): twitter (title), search twitter (title and notes),
+    // mail (username), other (no twitter at all)
+    QTest::newRow("russian keys find twitter") << "ецшееук" << QStringList{"mail", "search engine", "twitter"};
+    QTest::newRow("typed word still found") << "twitter" << QStringList{"mail", "search engine", "twitter"};
+    QTest::newRow("each word translated, AND kept") << "ецшееук ыуфкср" << QStringList{"search engine"};
+    QTest::newRow("translated and plain words") << "ыуфкср twitter" << QStringList{"search engine"};
+    QTest::newRow("no entry matches every word") << "ецшееук ьфшд ыуфкср" << QStringList{};
+    QTest::newRow("field prefix searches that field only") << "title:ецшееук" << QStringList{"twitter"};
+    QTest::newRow("username field") << "u:ецшееук" << QStringList{"mail"};
+    QTest::newRow("exclude removes translated matches") << "-ецшееук" << QStringList{"other"};
+    QTest::newRow("exclude with !") << "!ецшееук" << QStringList{"other"};
+    QTest::newRow("exact word not translated") << "+ецшееук" << QStringList{};
+    QTest::newRow("regex word not translated") << "*ецшееук" << QStringList{};
+    QTest::newRow("password field not translated") << "pw:ецшееук" << QStringList{};
+    QTest::newRow("password field as typed") << "pw:twitter" << QStringList{"search engine"};
+    QTest::newRow("word shorter than minimum not translated") << "у" << QStringList{};
+    QTest::newRow("wildcard kept in translated word") << "ец*ук" << QStringList{"mail", "search engine", "twitter"};
+    QTest::newRow("quoted word with space") << "\"ыуфкср утпшту\"" << QStringList{"search engine"};
+}
+
+void TestEntrySearcher::testKeyboardLayouts()
+{
+    QFETCH(QString, query);
+    QFETCH(QStringList, titles);
+
+    const auto addEntry = [this](const QString& title, const QString& username, const QString& notes) {
+        auto entry = new Entry();
+        entry->setGroup(m_rootGroup);
+        entry->setTitle(title);
+        entry->setUsername(username);
+        entry->setNotes(notes);
+        return entry;
+    };
+    addEntry("twitter", "alice", "");
+    addEntry("search engine", "bob", "find twitter here")->setPassword("twitter");
+    addEntry("mail", "twitter", "");
+    addEntry("other", "carol", "nothing here");
+
+    m_entrySearcher.setWordVariants(englishRussianVariants());
+    QCOMPARE(titlesOf(m_entrySearcher.search(query, m_rootGroup)), titles);
+}
+
+void TestEntrySearcher::testKeyboardLayoutsSearchTermParser()
+{
+    m_entrySearcher.setWordVariants(englishRussianVariants());
+
+    m_entrySearcher.parseSearchTerms("ецшееук title:ецшееук -ецшееук _attr:ецшееук group:ецшееук");
+    auto terms = m_entrySearcher.m_searchTerms;
+    QCOMPARE(terms.length(), 5);
+    for (const auto& term : terms) {
+        QCOMPARE(term.alternatives.size(), 1);
+        QCOMPARE(term.alternatives.first().word, QString("twitter"));
+    }
+    // The field prefix and the modifiers stay as typed
+    QCOMPARE(terms[1].field, EntrySearcher::Field::Title);
+    QCOMPARE(terms[2].exclude, true);
+    QCOMPARE(terms[3].field, EntrySearcher::Field::AttributeValue);
+    QCOMPARE(terms[3].word, QString("attr"));
+
+    m_entrySearcher.parseSearchTerms(
+        "+ецшееук *ецшееук pw:ецшееук password:ецшееук is:ецшееук has:ецшееук uuid:ецшееук у");
+    terms = m_entrySearcher.m_searchTerms;
+    QCOMPARE(terms.length(), 8);
+    for (const auto& term : terms) {
+        QVERIFY2(term.alternatives.isEmpty(), qPrintable(term.word));
+    }
+}
+
+void TestEntrySearcher::testKeyboardLayoutsOff()
+{
+    auto entry = new Entry();
+    entry->setGroup(m_rootGroup);
+    entry->setTitle("twitter");
+
+    // No variants by default
+    QCOMPARE(m_entrySearcher.search("ецшееук", m_rootGroup).size(), 0);
+    QCOMPARE(m_entrySearcher.search("twitter", m_rootGroup).size(), 1);
+
+    // A single installed layout gives no variants
+    const KeyboardLayoutTranslator russianOnly({fakeRussianLayout()}, 2);
+    m_entrySearcher.setWordVariants([russianOnly](const QString& word) { return russianOnly.variants(word); });
+    QCOMPARE(m_entrySearcher.search("ецшееук", m_rootGroup).size(), 0);
+
+    // Turned off again
+    m_entrySearcher.setWordVariants(englishRussianVariants());
+    QCOMPARE(m_entrySearcher.search("ецшееук", m_rootGroup).size(), 1);
+    m_entrySearcher.setWordVariants({});
+    QCOMPARE(m_entrySearcher.search("ецшееук", m_rootGroup).size(), 0);
 }

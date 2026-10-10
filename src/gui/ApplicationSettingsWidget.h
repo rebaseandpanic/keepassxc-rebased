@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2012 Felix Geyer <debfx@fobos.de>
  *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +27,8 @@ namespace Ui
     class ApplicationSettingsWidgetGeneral;
     class ApplicationSettingsWidgetSecurity;
 } // namespace Ui
+
+class KeyboardLayoutSearchSettingsWidget;
 
 class ISettingsPage
 {
@@ -75,6 +78,7 @@ private:
     Qt::KeyboardModifiers m_globalAutoTypeModifiers;
     class ExtraPage;
     QList<ExtraPage> m_extraPages;
+    KeyboardLayoutSearchSettingsWidget* m_keyboardLayoutSearchSettings = nullptr;
 };
 
 #endif // KEEPASSX_SETTINGSWIDGET_H

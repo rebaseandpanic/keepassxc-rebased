@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2014 Florian Geyer <blueice@fobos.de>
  *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +22,8 @@
 #include "PasswordHealth.h"
 #include "core/Group.h"
 #include "core/Tools.h"
+
+#include <algorithm>
 
 EntrySearcher::EntrySearcher(bool caseSensitive, bool skipProtected)
     : m_caseSensitive(caseSensitive)
@@ -141,6 +144,16 @@ bool EntrySearcher::isCaseSensitive() const
     return m_caseSensitive;
 }
 
+/**
+ * Set the source of alternative spellings for the words of the next parsed search strings
+ *
+ * @param wordVariants returns the variants of a word, empty to search the words only as typed
+ */
+void EntrySearcher::setWordVariants(const WordVariants& wordVariants)
+{
+    m_wordVariants = wordVariants;
+}
+
 bool EntrySearcher::searchEntryImpl(const Entry* entry)
 {
     // Pre-load in case they are needed
@@ -157,12 +170,24 @@ bool EntrySearcher::searchEntryImpl(const Entry* entry)
     // However when skipping protected fields, we will reject everything instead
     bool found = !m_skipProtected;
     for (const auto& term : m_searchTerms) {
+        // The term matches if its word or any of its alternatives matches
+        const auto matchAny = [&term](const auto& matches) {
+            return matches(term.word, term.regex)
+                   || std::any_of(term.alternatives.cbegin(), term.alternatives.cend(), [&matches](const auto& alt) {
+                          return matches(alt.word, alt.regex);
+                      });
+        };
+        const auto matchText = [&matchAny](const QString& text) {
+            return matchAny(
+                [&text](const QString&, const QRegularExpression& regex) { return regex.match(text).hasMatch(); });
+        };
+
         switch (term.field) {
         case Field::Title:
-            found = term.regex.match(entry->resolvePlaceholder(entry->title())).hasMatch();
+            found = matchText(entry->resolvePlaceholder(entry->title()));
             break;
         case Field::Username:
-            found = term.regex.match(entry->resolvePlaceholder(entry->username())).hasMatch();
+            found = matchText(entry->resolvePlaceholder(entry->username()));
             break;
         case Field::Password:
             if (m_skipProtected) {
@@ -171,34 +196,44 @@ bool EntrySearcher::searchEntryImpl(const Entry* entry)
             found = term.regex.match(entry->resolvePlaceholder(entry->password())).hasMatch();
             break;
         case Field::Url:
-            found = term.regex.match(entry->resolvePlaceholder(entry->url())).hasMatch();
+            found = matchText(entry->resolvePlaceholder(entry->url()));
             break;
         case Field::Notes:
-            found = term.regex.match(entry->notes()).hasMatch();
+            found = matchText(entry->notes());
             break;
         case Field::AttributeKV:
-            found = !attributes.filter(term.regex).empty();
+            found = matchAny([&attributes](const QString&, const QRegularExpression& regex) {
+                return !attributes.filter(regex).empty();
+            });
             break;
         case Field::Attachment:
-            found = !attachments.filter(term.regex).empty();
+            found = matchAny([&attachments](const QString&, const QRegularExpression& regex) {
+                return !attachments.filter(regex).empty();
+            });
             break;
         case Field::AttributeValue:
             if (m_skipProtected && entry->attributes()->isProtected(term.word)) {
                 continue;
             }
-            found = entry->attributes()->contains(term.word)
-                    && term.regex.match(entry->attributes()->value(term.word)).hasMatch();
+            found = entry->attributes()->contains(term.word) && matchText(entry->attributes()->value(term.word));
             break;
         case Field::Group:
             // Match against the full hierarchy if the word contains a '/' otherwise just the group name
-            if (term.word.contains('/')) {
-                found = term.regex.match(hierarchy).hasMatch();
-            } else if (entry->group()) {
-                found = term.regex.match(entry->group()->name()).hasMatch();
-            }
+            // (an entry without a group keeps the previous result)
+            found =
+                matchAny([&entry, &hierarchy, previous = found](const QString& word, const QRegularExpression& regex) {
+                    if (word.contains('/')) {
+                        return regex.match(hierarchy).hasMatch();
+                    } else if (entry->group()) {
+                        return regex.match(entry->group()->name()).hasMatch();
+                    }
+                    return previous;
+                });
             break;
         case Field::Tag:
-            found = entry->tagList().indexOf(term.regex) != -1;
+            found = matchAny([&entry](const QString&, const QRegularExpression& regex) {
+                return entry->tagList().indexOf(regex) != -1;
+            });
             break;
         case Field::Is:
             if (term.word.startsWith("expired", Qt::CaseInsensitive)) {
@@ -233,10 +268,12 @@ bool EntrySearcher::searchEntryImpl(const Entry* entry)
             break;
         default:
             // Terms without a specific field try to match title, username, url, and notes
-            found = term.regex.match(entry->resolvePlaceholder(entry->title())).hasMatch()
-                    || term.regex.match(entry->resolvePlaceholder(entry->username())).hasMatch()
-                    || term.regex.match(entry->resolvePlaceholder(entry->url())).hasMatch()
-                    || entry->tagList().indexOf(term.regex) != -1 || term.regex.match(entry->notes()).hasMatch();
+            found = matchAny([&entry](const QString&, const QRegularExpression& regex) {
+                return regex.match(entry->resolvePlaceholder(entry->title())).hasMatch()
+                       || regex.match(entry->resolvePlaceholder(entry->username())).hasMatch()
+                       || regex.match(entry->resolvePlaceholder(entry->url())).hasMatch()
+                       || entry->tagList().indexOf(regex) != -1 || regex.match(entry->notes()).hasMatch();
+            });
         }
 
         // negate the result if exclude:
@@ -306,6 +343,7 @@ void EntrySearcher::parseSearchTerms(const QString& searchString)
             opts |= Tools::RegexConvertOpts::CASE_SENSITIVE;
         }
         term.regex = Tools::convertToRegex(term.word, opts);
+        const auto typedWord = term.word;
 
         // Exclude modifier
         term.exclude = mods.contains("-") || mods.contains("!");
@@ -328,6 +366,14 @@ void EntrySearcher::parseSearchTerms(const QString& searchString)
                         break;
                     }
                 }
+            }
+        }
+
+        // Alternative spellings: not for exact or regex words, nor for fields whose values are not typed text
+        if (m_wordVariants && !mods.contains("+") && !mods.contains("*") && term.field != Field::Password
+            && term.field != Field::Is && term.field != Field::Has && term.field != Field::Uuid) {
+            for (const auto& variant : m_wordVariants(typedWord)) {
+                term.alternatives.append({variant, Tools::convertToRegex(variant, opts)});
             }
         }
 

@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2016 Jonathan White <support@dmapps.us>
  *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -56,6 +57,7 @@ signals:
     void searchCanceled();
     void caseSensitiveChanged(bool state);
     void limitGroupChanged(bool state);
+    void allKeyboardLayoutsChanged();
     void escapePressed();
     void downPressed();
     void enterPressed();
@@ -85,6 +87,7 @@ private:
     QTimer* m_searchTimer;
     QTimer* m_clearSearchTimer;
     QAction* m_actionCaseSensitive;
+    QAction* m_actionAllKeyboardLayouts;
     QAction* m_actionLimitGroup;
     QAction* m_actionWaitForEnter;
     QMenu* m_searchMenu;

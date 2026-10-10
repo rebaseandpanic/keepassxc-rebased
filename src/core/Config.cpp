@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2024 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2011 Felix Geyer <debfx@fobos.de>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -238,7 +239,11 @@ static const QHash<Config::ConfigKey, ConfigDirective> configStrings = {
 
     // Messages
     {Config::Messages_NoLegacyKeyFileWarning, {QS("Messages/NoLegacyKeyFileWarning"), Roaming, false}},
-    {Config::Messages_HidePreReleaseWarning, {QS("Messages/HidePreReleaseWarning"), Local, {}}}};
+    {Config::Messages_HidePreReleaseWarning, {QS("Messages/HidePreReleaseWarning"), Local, {}}},
+
+    // KeePassXC Rebased
+    {Config::Rebased_SearchAllKeyboardLayouts, {QS("Rebased/SearchAllKeyboardLayouts"), Roaming, true}},
+    {Config::Rebased_SearchKeyboardLayoutsMinimumLength, {QS("Rebased/SearchKeyboardLayoutsMinimumLength"), Roaming, 2}}};
 
 // clang-format on
 

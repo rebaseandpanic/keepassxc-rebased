@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2023 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2012 Felix Geyer <debfx@fobos.de>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,6 +37,8 @@
 #include "gui/osutils/OSUtils.h"
 #include "gui/styles/StateColorPalette.h"
 #include "quickunlock/QuickUnlockInterface.h"
+#include "rebased/KeyboardLayoutSearch.h"
+#include "rebased/KeyboardLayouts.h"
 
 #include "FileDialog.h"
 #include "MessageBox.h"
@@ -228,6 +231,13 @@ ApplicationSettingsWidget::ApplicationSettingsWidget(QWidget* parent)
     m_generalUi->faviconTimeoutLabel->setVisible(false);
     m_generalUi->faviconTimeoutSpinBox->setVisible(false);
 #endif
+
+    // Search in all keyboard layouts (KeePassXC Rebased), after the entry settings
+    if (keyboardLayoutsSupported()) {
+        m_keyboardLayoutSearchSettings = new KeyboardLayoutSearchSettingsWidget();
+        auto* layout = m_generalUi->verticalLayout_8;
+        layout->insertWidget(layout->indexOf(m_generalUi->entryGroup) + 1, m_keyboardLayoutSearchSettings);
+    }
 }
 
 ApplicationSettingsWidget::~ApplicationSettingsWidget() = default;
@@ -419,6 +429,10 @@ void ApplicationSettingsWidget::loadSettings()
     m_secUi->quickUnlockCheckBox->setEnabled(getQuickUnlock()->isAvailable());
     m_secUi->quickUnlockCheckBox->setChecked(config()->get(Config::Security_QuickUnlock).toBool());
 
+    if (m_keyboardLayoutSearchSettings) {
+        m_keyboardLayoutSearchSettings->loadSettings();
+    }
+
     for (const ExtraPage& page : asConst(m_extraPages)) {
         page.loadSettings();
     }
@@ -569,6 +583,10 @@ void ApplicationSettingsWidget::saveSettings()
         config()->remove(Config::LastDir);
         config()->remove(Config::LastKeyFiles);
         config()->remove(Config::LastChallengeResponse);
+    }
+
+    if (m_keyboardLayoutSearchSettings) {
+        m_keyboardLayoutSearchSettings->saveSettings();
     }
 
     for (const ExtraPage& page : asConst(m_extraPages)) {

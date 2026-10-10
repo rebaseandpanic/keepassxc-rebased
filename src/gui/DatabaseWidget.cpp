@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  * Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
+ * Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,6 +58,7 @@
 #include "gui/tag/TagView.h"
 #include "gui/widgets/ElidedLabel.h"
 #include "keeshare/KeeShare.h"
+#include "rebased/KeyboardLayoutSearch.h"
 #include "remote/RemoteHandler.h"
 #include "remote/RemoteSettings.h"
 
@@ -1750,6 +1752,7 @@ void DatabaseWidget::search(const QString& searchtext)
         searchGroup = currentGroup();
     }
 
+    m_entrySearcher->setWordVariants(keyboardLayoutSearchVariants());
     auto results = m_entrySearcher->search(searchtext, searchGroup);
 
     // Display a label detailing our search results
@@ -1815,6 +1818,12 @@ void DatabaseWidget::deleteSearch(const QString& name)
 void DatabaseWidget::setSearchCaseSensitive(bool state)
 {
     m_entrySearcher->setCaseSensitive(state);
+    refreshSearch();
+}
+
+void DatabaseWidget::refreshSearchAllKeyboardLayouts()
+{
+    // The option is read from the configuration on every search
     refreshSearch();
 }
 

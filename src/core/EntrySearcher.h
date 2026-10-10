@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2014 Florian Geyer <debfx@fobos.de>
  *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +21,8 @@
 #define KEEPASSX_ENTRYSEARCHER_H
 
 #include <QRegularExpression>
+
+#include <functional>
 
 class Group;
 class Entry;
@@ -45,6 +48,13 @@ public:
         Uuid
     };
 
+    // Another spelling of a search word; the term matches if the word or any alternative matches
+    struct Alternative
+    {
+        QString word;
+        QRegularExpression regex;
+    };
+
     struct SearchTerm
     {
         Field field;
@@ -52,7 +62,11 @@ public:
         QString word;
         QRegularExpression regex;
         bool exclude;
+        QList<Alternative> alternatives;
     };
+
+    // Returns other spellings of a word typed in the search string
+    using WordVariants = std::function<QStringList(const QString& word)>;
 
     explicit EntrySearcher(bool caseSensitive = false, bool skipProtected = false);
 
@@ -66,6 +80,10 @@ public:
 
     void setCaseSensitive(bool state);
     bool isCaseSensitive() const;
+    // Search strings parsed from now on also match the variants of their words,
+    // except exact (+) and regex (*) words and the password, is, has and uuid fields.
+    // An empty function turns this off.
+    void setWordVariants(const WordVariants& wordVariants);
 
 private:
     bool searchEntryImpl(const Entry* entry);
@@ -74,6 +92,7 @@ private:
     bool m_caseSensitive;
     bool m_skipProtected;
     QList<SearchTerm> m_searchTerms;
+    WordVariants m_wordVariants;
 
     friend class TestEntrySearcher;
 };

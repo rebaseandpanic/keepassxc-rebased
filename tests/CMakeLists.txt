@@ -163,6 +163,9 @@ target_compile_definitions(testofficialinstanceguard PRIVATE
         OFFICIAL_INSTANCE_HOLDER="$<TARGET_FILE:testofficialinstance-holder>")
 add_dependencies(testofficialinstanceguard testofficialinstance-holder)
 
+add_unit_test(NAME testkeyboardlayouttranslator SOURCES TestKeyboardLayoutTranslator.cpp
+        LIBS ${TEST_LIBRARIES})
+
 add_unit_test(NAME testtools SOURCES TestTools.cpp
         LIBS testsupport ${TEST_LIBRARIES})
 

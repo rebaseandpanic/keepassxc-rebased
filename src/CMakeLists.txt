@@ -49,6 +49,7 @@ set(core_SOURCES
         core/Tools.cpp
         core/Totp.cpp
         core/Translator.cpp
+        rebased/KeyboardLayoutTranslator.cpp
         cli/Utils.cpp
         crypto/Crypto.cpp
         crypto/CryptoHash.cpp
@@ -214,6 +215,7 @@ set(gui_SOURCES
         quickunlock/QuickUnlockInterface.cpp
         ../share/icons/icons.qrc
         ../share/wizard/wizard.qrc
+        rebased/KeyboardLayoutSearch.cpp
         rebased/OfficialInstanceGuard.cpp)
 
 # Keyboard layouts of the operating system (KeePassXC Rebased)

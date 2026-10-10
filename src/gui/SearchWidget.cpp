@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2020 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@
 #include "core/SignalMultiplexer.h"
 #include "gui/Icons.h"
 #include "gui/widgets/PopupHelpWidget.h"
+#include "rebased/KeyboardLayouts.h"
 
 SearchWidget::SearchWidget(QWidget* parent)
     : QWidget(parent)
@@ -65,6 +67,15 @@ SearchWidget::SearchWidget(QWidget* parent)
     m_actionCaseSensitive = m_searchMenu->addAction(tr("Case sensitive"), this, SLOT(updateCaseSensitive()));
     m_actionCaseSensitive->setObjectName("actionSearchCaseSensitive");
     m_actionCaseSensitive->setCheckable(true);
+
+    m_actionAllKeyboardLayouts =
+        m_searchMenu->addAction(tr("Search in all keyboard layouts"), this, [this](bool state) {
+            config()->set(Config::Rebased_SearchAllKeyboardLayouts, state);
+            emit allKeyboardLayoutsChanged();
+        });
+    m_actionAllKeyboardLayouts->setObjectName("actionSearchAllKeyboardLayouts");
+    m_actionAllKeyboardLayouts->setCheckable(true);
+    m_actionAllKeyboardLayouts->setVisible(keyboardLayoutsSupported());
 
     m_actionLimitGroup = m_searchMenu->addAction(tr("Limit search to selected group"), this, SLOT(updateLimitGroup()));
     m_actionLimitGroup->setObjectName("actionSearchLimitGroup");
@@ -155,6 +166,7 @@ void SearchWidget::connectSignals(SignalMultiplexer& mx)
     mx.connect(this, SIGNAL(saveSearch(QString)), SLOT(saveSearch(QString)));
     mx.connect(this, SIGNAL(caseSensitiveChanged(bool)), SLOT(setSearchCaseSensitive(bool)));
     mx.connect(this, SIGNAL(limitGroupChanged(bool)), SLOT(setSearchLimitGroup(bool)));
+    mx.connect(this, SIGNAL(allKeyboardLayoutsChanged()), SLOT(refreshSearchAllKeyboardLayouts()));
     mx.connect(this, SIGNAL(downPressed()), SLOT(focusOnEntries()));
     mx.connect(SIGNAL(requestSearch(QString)), this, SLOT(performRequestedSearch(QString)));
     mx.connect(SIGNAL(clearSearch()), this, SLOT(clearSearch()));
@@ -247,6 +259,8 @@ void SearchWidget::toggleHelp()
 
 void SearchWidget::showSearchMenu()
 {
+    // The option can also be changed in the application settings
+    m_actionAllKeyboardLayouts->setChecked(config()->get(Config::Rebased_SearchAllKeyboardLayouts).toBool());
     m_searchMenu->exec(m_ui->searchEdit->mapToGlobal(m_ui->searchEdit->rect().bottomLeft()));
 }
 

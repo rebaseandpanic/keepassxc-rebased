@@ -1,6 +1,7 @@
 /*
  *  Copyright (C) 2024 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
+ *  Copyright (C) 2026 rebaseandpanic <https://github.com/rebaseandpanic>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -253,6 +254,7 @@ public slots:
     void deleteSearch(const QString& name);
     void setSearchCaseSensitive(bool state);
     void setSearchLimitGroup(bool state);
+    void refreshSearchAllKeyboardLayouts();
     void endSearch();
 
     void showMessage(const QString& text,
